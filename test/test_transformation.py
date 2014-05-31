@@ -10,7 +10,6 @@ class TestSelect(object):
         filtered = t.select(frame, ['name'])
         assert frame[['name']].to_dict(outtype='rows') == filtered.to_dict(outtype='rows')
 
-
 def test_lt(frame):
     filtered = t.lt(frame, 'zip', 63304)
     assert frame[frame['zip'] < 63304].to_dict() == filtered.to_dict()

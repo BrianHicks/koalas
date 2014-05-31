@@ -1,24 +1,39 @@
+transformations = {}
+
+def transformation(func):
+    global transformations
+    transformations[func.__name__] = func
+
+    return func
+
+@transformation
 def select(frame, fields):
     if not isinstance(fields, list):
         raise ValueError('"fields" must be a list')
 
     return frame[fields]
 
+@transformation
 def lt(frame, field, value):
     return frame[frame[field] < value]
 
+@transformation
 def lte(frame, field, value):
     return frame[frame[field] <= value]
 
+@transformation
 def gt(frame, field, value):
     return frame[frame[field] > value]
 
+@transformation
 def gte(frame, field, value):
     return frame[frame[field] >= value]
 
+@transformation
 def eq(frame, field, value):
     return frame[frame[field] == value]
 
+@transformation
 def ne(frame, field, value):
     return frame[frame[field] != value]
 
