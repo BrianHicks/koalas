@@ -3,6 +3,7 @@ from . import data
 from . import transformation
 
 app = Flask(__name__)
+app.debug = False
 
 @app.route('/dataframe', methods=['POST'])
 def load():
