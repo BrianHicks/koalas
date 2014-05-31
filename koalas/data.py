@@ -25,12 +25,22 @@ def load(content, content_type, **options):
     )
 
 def dump(frame, content_type, **options):
-    try:
-        func = content_types[content_type][1]
-    except KeyError:
-        raise KeyError(
-            "I don't know how to dump \"{!s}\"".format(content_type)
-        )
+    func = None
+
+    # try specialized outputs first
+    if content_type == 'image/png':
+        def func(frame, out, **options):
+            options['format'] = 'png'
+            frame.figure.savefig(out, **options)
+
+    # now try common outputs
+    if func is None:
+        try:
+            func = content_types[content_type][1]
+        except KeyError:
+            raise KeyError(
+                "I don't know how to dump \"{!s}\"".format(content_type)
+            )
 
     out = StringIO()
     func(frame, out, **options)

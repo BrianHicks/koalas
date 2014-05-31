@@ -41,6 +41,37 @@ def eq(frame, field, value):
 def ne(frame, field, value):
     return frame[frame[field] != value]
 
+@transformation
+def groupby(frame, fields, **opts):
+    return frame.groupby(fields, **opts)
+
+@transformation
+def sum(frame):
+    return frame.sum()
+
+@transformation
+def mean(frame):
+    return frame.mean()
+
+@transformation
+def median(frame):
+    return frame.median()
+
+@transformation
+def resample(frame, rule, how, **opts):
+    return frame.resample(rule, how, **opts)
+
+@transformation
+def localize(frame, zone):
+    try:
+        return frame.tz_convert(zone)
+    except TypeError:
+        return frame.tz_localize(zone)
+
+@transformation
+def plot(frame, **opts):
+    return frame.plot(**opts)
+
 def apply(frame, pipeline):
     for transformation in pipeline:
         name = transformation.pop('name', None)

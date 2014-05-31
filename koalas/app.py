@@ -12,8 +12,17 @@ def load():
     except KeyError:
         return jsonify({'details': 'Content-Type header is required'}), 400
 
+    opts = {}
+    for k, v in request.args.items():
+        if v.isdigit():
+            v = float(v)
+        if k == 'parse_dates':
+            v = bool(v)
+
+        opts[k] = v
+
     try:
-        data.load(request.data, content, **request.args)
+        data.load(request.data, content, **opts)
     except KeyError as err:
         return jsonify({'details': err.message}), 400
 
@@ -23,6 +32,9 @@ def load():
 @app.route('/query', methods=['POST'])
 def query():
     frame = data.data
+
+    if frame is None:
+        return jsonify({'details': 'no data loaded'}), 400
 
     try:
         frame = transformation.apply(frame, request.json)
