@@ -2,6 +2,7 @@ from StringIO import StringIO
 from flask import Flask, g, Response, request
 import os
 import pandas as pd
+from urllib import unquote_plus
 
 app = Flask(__name__)
 
@@ -45,9 +46,90 @@ def data():
 
 @app.route('/')
 def index():
+    kind = 'csv'
+
+    frame = data()
+    columns = frame.columns
+    start = 0
+    end = len(frame)
+
+    for item in request.query_string.split('&'): # TODO: again probably a little naive
+        try:
+            key, value = item.split('=', 1)
+        except ValueError:
+            continue  # but log it?
+
+        # special cases
+        print key
+        if key == 'format':
+            kind = value
+            continue
+
+        elif key == 'columns':
+            columns = value.split(',')
+            continue
+
+        elif key == 'start':
+            start = int(value)
+            continue
+
+        elif key == 'end':
+            end = int(value)
+            continue
+
+        # then probably filtering!
+        operators = key.split('__')
+        if len(operators) == 1:
+            # we're going to assume we've just got a name, and filter exactly
+            # on that column. The value has to be castable to the correct
+            # datatype for that column
+            name = unquote_plus(operators[0])
+
+            dtype = frame.dtypes[name].type
+            values = [dtype(unquote_plus(val)) for val in value.split(',')]
+            frame = frame[frame[name].isin(values)]
+
+        else:
+            name = unquote_plus(operators[0])
+            dtype = frame.dtypes[name].type
+            values = [dtype(unquote_plus(val)) for val in value.split(',')]
+
+            # TODO: this process could probably be more efficient.
+            mask = None
+            for value in values:
+                # TODO: danger danger Will Robinson! Absolutely no filtering ahead!
+                inner = frame[name]
+                for op in operators[1:]:
+                    op_ = getattr(inner, op, None)
+
+                    if inner is None:
+                        raise AttributeError('no attribute {!r} on {!r}'.format(op, op_))
+                    else:
+                        if callable(op_):
+                            val = op_(value)
+                            break
+
+                        elif op == 'lte':
+                            val = inner < value | inner.eq(value)
+                            break
+                        elif op == 'gte':
+                            val = inner > value | inner.eq(value)
+                            break
+
+                        else:
+                            inner = op_
+
+                if mask is None:
+                    mask = val
+                else:
+                    mask |= val
+
+
+            frame = frame[mask]
+
     return response(
-        data(),
-        kind=request.args.get('fmt', 'csv') # TODO: freakin' sanitize this!
+        frame[columns][start:end],
+        kind=kind # TODO: freakin' sanitize this!
     )
 
 if __name__ == '__main__':
