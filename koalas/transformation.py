@@ -14,6 +14,10 @@ def select(frame, fields):
     return frame[fields]
 
 @transformation
+def slice(frame, lower=0, upper=None, step=1):
+    return frame[lower:upper or len(frame):step]
+
+@transformation
 def lt(frame, field, value):
     return frame[frame[field] < value]
 
@@ -37,7 +41,7 @@ def eq(frame, field, value):
 def ne(frame, field, value):
     return frame[frame[field] != value]
 
-def transform(frame, pipeline):
+def apply(frame, pipeline):
     for transformation in pipeline:
         name = transformation.pop('name', None)
         if name is None:

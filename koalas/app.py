@@ -24,6 +24,11 @@ def query():
     frame = data.data
 
     try:
+        frame = transformation.apply(frame, request.json)
+    except (KeyError, TypeError) as err:
+        return jsonify({'details': err.message}), 400
+
+    try:
         return data.dump(
             frame,
             request.headers['Accept'],

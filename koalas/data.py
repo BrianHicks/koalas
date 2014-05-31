@@ -24,7 +24,7 @@ def load(content, content_type, **options):
         **options
     )
 
-def dump(content, content_type, **options):
+def dump(frame, content_type, **options):
     try:
         func = content_types[content_type][1]
     except KeyError:
@@ -33,6 +33,6 @@ def dump(content, content_type, **options):
         )
 
     out = StringIO()
-    func(data, out, **options)
+    func(frame, out, **options)
     out.seek(0)
     return out.read()
