@@ -60,7 +60,6 @@ def index():
             continue  # but log it?
 
         # special cases
-        print key
         if key == 'format':
             kind = value
             continue
