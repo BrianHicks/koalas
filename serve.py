@@ -10,22 +10,21 @@ content_types = {
     'json': 'application/json',
 }
 
-def response(frame, status=200):
+def response(frame, status=200, kind='csv'):
     return Response(
-        serialize(frame),
+        serialize(frame, kind),
         status=status,
         mimetype=g.data_content_type,
     )
 
-def serialize(frame):
+def serialize(frame, kind='csv'):
     out = StringIO()
-    getattr(frame, 'to_%s' % g.data_fmt)(out)
+    getattr(frame, 'to_%s' % kind)(out) # TODO: this is terrible
     out.seek(0)
 
     return out.read()
 
-@app.before_first_request
-def load_data():
+def data():
     try:
         fname = os.environ['FNAME']
     except KeyError:
@@ -41,13 +40,15 @@ def load_data():
     if meth is None:
         raise ValueError("I don't know how to read '%s' files" % fmt)
 
-    g.data = meth(fname)
-    g.data_fmt = fmt
     g.data_content_type = content_types.get(fmt, 'text/plain')
+    return meth(fname)
 
 @app.route('/')
 def index():
-    return response(g.data)
+    return response(
+        data(),
+        kind=request.args.get('fmt', 'csv') # TODO: freakin' sanitize this!
+    )
 
 if __name__ == '__main__':
     app.run(
